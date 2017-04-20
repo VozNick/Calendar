@@ -1,10 +1,12 @@
 package com.example.vmm408.calendarmar_29;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.RelativeLayout;
 
 import com.example.vmm408.calendarmar_29.fragments.CalendarViewFragment;
+import com.example.vmm408.calendarmar_29.service.NotificationService;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         new CalendarViewFragment().initNewFragment(this, activity_main_container, "calendar_f");
+        startService(new Intent(this, NotificationService.class));
     }
 
     @Override

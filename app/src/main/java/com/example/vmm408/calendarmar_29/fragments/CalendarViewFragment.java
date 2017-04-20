@@ -34,9 +34,9 @@ public class CalendarViewFragment extends BaseFragment
     @Override
     public void onSelectedDayChange(@NonNull CalendarView view,
                                     int year, int month, int dayOfMonth) {
-        ListItemFragment itemsFragment = new ListItemFragment();
-        itemsFragment.setArguments(initBundle(year, month, dayOfMonth));
-        initNewFragment(itemsFragment, "list_f");
+        ListItemFragment listItemFragment = new ListItemFragment();
+        listItemFragment.setArguments(initBundle(year, month + 1, dayOfMonth));
+        initNewFragment(listItemFragment, "list_f");
     }
 
     private Bundle initBundle(int year, int month, int dayOfMonth) {
@@ -46,6 +46,4 @@ public class CalendarViewFragment extends BaseFragment
         bundle.putInt("dayOfMonth", dayOfMonth);
         return bundle;
     }
-
-
 }

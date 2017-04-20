@@ -4,13 +4,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.vmm408.calendarmar_29.R;
 import com.example.vmm408.calendarmar_29.adapter.Adapter;
@@ -25,7 +22,9 @@ import butterknife.BindView;
 public class ListItemFragment extends BaseFragment {
     @BindView(R.id.item_container_lv)
     ListView item_container_lv;
+    private List<NoteModel> noteModelList = new ArrayList<>();
     private DBHelper dbHelper;
+    private Cursor cursor;
     private int year;
     private int month;
     private int dayOfMonth;
@@ -43,10 +42,41 @@ public class ListItemFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
         dbHelper = new DBHelper(getContext());
         getArgs();
+        getNoteModel(year, month, dayOfMonth);
+        item_container_lv.setAdapter(new Adapter(getActivity(), noteModelList, dbHelper,
+                year, month, dayOfMonth));
+    }
 
+    private void getArgs() {
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            year = bundle.getInt("year");
+            month = bundle.getInt("month");
+            dayOfMonth = bundle.getInt("dayOfMonth");
+        }
+    }
 
-        item_container_lv.setAdapter(new Adapter(getActivity(),
-                getNoteModel(year, month + 1, dayOfMonth), dbHelper, year, month, dayOfMonth));
+    private void getNoteModel(int year, int month, int dayOfMonth) {
+        SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
+        cursor = sqLiteDatabase.query(
+                "events",
+                new String[]{"description", "is_notify", "event_time"},
+                "year=? AND month=? AND day_of_month=?",
+                new String[]{String.valueOf(year),
+                        String.valueOf(month),
+                        String.valueOf(dayOfMonth)},
+                null, null, null);
+        if (cursor.moveToFirst()) getFromCursor();
+        cursor.close();
+    }
+
+    private void getFromCursor() {
+        do {
+            noteModelList.add(new NoteModel(
+                    cursor.getString(cursor.getColumnIndex("description")),
+                    cursor.getInt(cursor.getColumnIndex("event_time")),
+                    cursor.getInt(cursor.getColumnIndex("is_notify")) == 1));
+        } while (cursor.moveToNext());
     }
 
     @Override
@@ -54,32 +84,4 @@ public class ListItemFragment extends BaseFragment {
         dbHelper.close();
         super.onDestroyView();
     }
-
-    private void getArgs() {
-        try {
-            year = getArguments().getInt("year");
-            month = getArguments().getInt("month");
-            dayOfMonth = getArguments().getInt("dayOfMonth");
-        } catch (NullPointerException ignored) {
-        }
-    }
-
-    private List<NoteModel> getNoteModel(int year, int month, int dayOfMonth) {
-        List<NoteModel> noteModelList = new ArrayList<>();
-        SQLiteDatabase sqLiteDatabase = dbHelper.getReadableDatabase();
-        Cursor cursor = sqLiteDatabase.query("events", new String[]{"description", "is_notify", "event_time"},
-                "day_of_month=?", new String[]{String.valueOf(dayOfMonth)}, null, null, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                NoteModel noteModel = new NoteModel();
-                noteModel.setDescription(cursor.getString(cursor.getColumnIndex("description")));
-                noteModel.setNotify((cursor.getInt(cursor.getColumnIndex("is_notify")) == 1));
-                noteModel.setTime(cursor.getFloat(cursor.getColumnIndex("event_time")));
-                noteModelList.add(noteModel);
-            } while (cursor.moveToNext());
-        }
-        return noteModelList;
-    }
-
 }
