@@ -10,32 +10,31 @@ import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
 public class BaseFragment extends Fragment {
-
     private Unbinder unbinder;
     private AppCompatActivity appCompatActivity;
-    private View view;
+    private View viewContainer;
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        unbinder = ButterKnife.bind(this, view);
         super.onViewCreated(view, savedInstanceState);
+        unbinder = ButterKnife.bind(this, view);
     }
 
     @Override
     public void onDestroyView() {
-        unbinder.unbind();
         super.onDestroyView();
+        unbinder.unbind();
     }
 
-    public void initNewFragment(AppCompatActivity appCompatActivity, View view, String tag) {
+    public void initNewFragment(AppCompatActivity appCompatActivity, View viewContainer, String tag) {
         this.appCompatActivity = appCompatActivity;
-        this.view = view;
+        this.viewContainer = viewContainer;
         appCompatActivity.getSupportFragmentManager().beginTransaction()
-                .replace(view.getId(), this, tag).commit();
+                .replace(viewContainer.getId(), this, tag).commit();
     }
 
     public void initNewFragment(Fragment fragment, String tag) {
         appCompatActivity.getSupportFragmentManager().beginTransaction()
-                .replace(view.getId(), fragment, tag).commit();
+                .replace(viewContainer.getId(), fragment, tag).commit();
     }
 }

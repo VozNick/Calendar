@@ -3,7 +3,6 @@ package com.example.vmm408.calendarmar_29.adapter;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,6 +17,7 @@ import android.widget.TextView;
 
 import com.example.vmm408.calendarmar_29.R;
 import com.example.vmm408.calendarmar_29.dataBaseHelper.DBHelper;
+import com.example.vmm408.calendarmar_29.fragments.ListItemFragment;
 import com.example.vmm408.calendarmar_29.models.NoteModel;
 
 import java.util.Calendar;
@@ -28,24 +28,22 @@ import butterknife.ButterKnife;
 
 public class Adapter extends BaseAdapter {
     private Context context;
-    private List<NoteModel> noteModelList;
     private DBHelper dbHelper;
-    private LayoutInflater layoutInflater;
-
+    private List<NoteModel> noteModelList;
     private int year;
     private int month;
     private int dayOfMonth;
-
+    private LayoutInflater layoutInflater;
     private EditText descriptionAlert;
     private CheckBox isNotifyAlert;
-    private ContentValues contentValues;
     private Calendar calendar;
+    private int positionOnClick;
 
-    public Adapter(Context context, List<NoteModel> noteModelList, DBHelper dbHelper,
+    public Adapter(Context context, DBHelper dbHelper, List<NoteModel> noteModelList,
                    int year, int month, int dayOfMonth) {
         this.context = context;
-        this.noteModelList = noteModelList;
         this.dbHelper = dbHelper;
+        this.noteModelList = noteModelList;
         this.year = year;
         this.month = month;
         this.dayOfMonth = dayOfMonth;
@@ -55,14 +53,6 @@ public class Adapter extends BaseAdapter {
 
     private void fillList() {
         if (noteModelList.size() == 0) {
-//            for (int i = 0; i < 24; i++) {
-//                if (noteModelList.get(i).getTime() != (i + 0f)) {
-//                    noteModelList.add(i, new NoteModel("note" + String.valueOf(i), i, false));
-//                } else {
-//                    i++;
-//                }
-//            }
-//        } else {
             for (int i = 0; i < 24; i++) {
                 noteModelList.add(new NoteModel("note" + String.valueOf(i), i, false));
             }
@@ -91,7 +81,8 @@ public class Adapter extends BaseAdapter {
         convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                createAlert(position);
+                positionOnClick = position;
+                createAlert();
             }
         });
         return convertView;
@@ -107,48 +98,17 @@ public class Adapter extends BaseAdapter {
                         .isNotify() ? View.VISIBLE : View.GONE));
     }
 
-    private void createAlert(final int position) {
+    private void createAlert() {
         new AlertDialog.Builder(context)
                 .setView(alertView())
                 .setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        positiveAlertClick(position);
+                        positiveAlertClick();
                         dialog.dismiss();
-//                            new ListItemFragment();
                     }
                 }).create().show();
     }
-
-//    @Override
-//    public void onClick(View v) {
-//        new AlertDialog.Builder(context)
-//                .setView(alertView())
-//                .setPositiveButton("Save", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        if (!TextUtils.isEmpty(descriptionAlert.getText())) {
-//                            Calendar calendar = Calendar.getInstance();
-//                            calendar.set(year, month, dayOfMonth);
-//                            initValues(calendar);
-//                            dbHelper.getWritableDatabase().insert("events", null, contentValues);
-//
-//                            PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 101, new Intent("wakeup"), PendingIntent.FLAG_ONE_SHOT);
-//                            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-//                            calendar.setTime(new Date(System.currentTimeMillis()));
-//                            calendar.add(Calendar.MINUTE, 1);
-//                            alarmManager.set(AlarmManager.RTC_WAKEUP, 0, pendingIntent);
-//
-//
-////                            noteModelList.add(new NoteModel(descriptionAlert.getText().toString(), position, (isNotify.isChecked())));
-////                            notifyDataSetChanged();
-//                        }
-//                        dialog.dismiss();
-//
-////                            new ListItemFragment();
-//                    }
-//                }).create().show();
-//    }
 
     private View alertView() {
         View view = LayoutInflater.from(context).inflate(R.layout.style_new_alert, null);
@@ -157,37 +117,35 @@ public class Adapter extends BaseAdapter {
         return view;
     }
 
-    private void positiveAlertClick(int position) {
+    private void positiveAlertClick() {
         if (!TextUtils.isEmpty(descriptionAlert.getText())) {
             calendar = Calendar.getInstance();
             calendar.set(year, month, dayOfMonth);
-            initValues(position);
-            dbHelper.getWritableDatabase().insert("events", null, contentValues);
-
-            noteModelList.add(new NoteModel(descriptionAlert.getText().toString(), position, (isNotifyAlert.isChecked())));
-            notifyDataSetChanged();
-
-
-            initNotification();
+            addToBaseAndUpdateList();
+            initAlarmManager();
         }
     }
 
-    private void initValues(int position) {
-        contentValues = new ContentValues();
-        contentValues.put("description", descriptionAlert.getText().toString());
-        contentValues.put("is_notify", (isNotifyAlert.isChecked()));
-        contentValues.put("event_time", position);
-        contentValues.put("year", calendar.get(Calendar.YEAR));
-        contentValues.put("month", calendar.get(Calendar.MONTH));
-        contentValues.put("day_of_month", calendar.get(Calendar.DAY_OF_MONTH));
+    private void addToBaseAndUpdateList() {
+        dbHelper.addData(descriptionAlert, isNotifyAlert, positionOnClick, calendar);
+        noteModelList.add(new NoteModel(descriptionAlert.getText().toString(),
+                positionOnClick, (isNotifyAlert.isChecked())));
+        notifyDataSetChanged();
     }
 
-    private void initNotification() {
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 101, new Intent("wakeup"), PendingIntent.FLAG_ONE_SHOT);
+    private void initAlarmManager() {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         calendar.setTime(new Date(System.currentTimeMillis()));
         calendar.add(Calendar.MINUTE, 1);
-        alarmManager.set(AlarmManager.RTC_WAKEUP, 0, pendingIntent);
+        alarmManager.set(AlarmManager.RTC_WAKEUP, 0, initPendingIntent());
+    }
+
+    private PendingIntent initPendingIntent() {
+        return PendingIntent.getBroadcast(context, 101, initIntent(), PendingIntent.FLAG_ONE_SHOT);
+    }
+
+    private Intent initIntent() {
+        return new Intent("wakeUp").putExtra("description", descriptionAlert.getText().toString());
     }
 
 }

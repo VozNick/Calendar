@@ -13,21 +13,21 @@ import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.activity_main_container)
-    RelativeLayout activity_main_container;
+    RelativeLayout activityMainContainer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        new CalendarViewFragment().initNewFragment(this, activity_main_container, "calendar_f");
+        new CalendarViewFragment().initNewFragment(this, activityMainContainer, "calendarFrag");
         startService(new Intent(this, NotificationService.class));
     }
 
     @Override
     public void onBackPressed() {
-        if (getSupportFragmentManager().findFragmentByTag("list_f") != null) {
-            new CalendarViewFragment().initNewFragment(this, activity_main_container, "calendar_f");
+        if (getSupportFragmentManager().findFragmentByTag("listFrag") != null) {
+            new CalendarViewFragment().initNewFragment(this, activityMainContainer, "calendarFrag");
         } else {
             super.onBackPressed();
         }

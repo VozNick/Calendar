@@ -36,7 +36,7 @@ public class CalendarViewFragment extends BaseFragment
                                     int year, int month, int dayOfMonth) {
         ListItemFragment listItemFragment = new ListItemFragment();
         listItemFragment.setArguments(initBundle(year, month + 1, dayOfMonth));
-        initNewFragment(listItemFragment, "list_f");
+        initNewFragment(listItemFragment, "listFrag");
     }
 
     private Bundle initBundle(int year, int month, int dayOfMonth) {
